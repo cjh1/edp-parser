@@ -15,7 +15,7 @@ def _build_csv_parser():
 
     csv_header = pp.delimitedList(pp.Word(pp.printables, excludeChars=','))
 
-    csv_row = pp.delimitedList(pp.Word(pp.nums + '.+-e_'))
+    csv_row = pp.delimitedList(pp.Word(pp.nums + '.+-e_') | pp.Literal('custom'))
 
     indent_stack = [1]
     block = pp.Forward()
