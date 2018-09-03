@@ -3,7 +3,7 @@ from pyparsing import pyparsing_common
 import json
 import sys
 
-def _build_txt_parser():
+def _build_sample_parser():
     separator = pp.Suppress('=')
     key = pp.LineStart() + pp.Literal('%').suppress() + pp.Word(pp.printables, excludeChars='=')
     value =  pp.Regex(r'[^\r%]*') | pp.Empty() + pp.LineEnd().suppress()
@@ -40,8 +40,8 @@ def _build_txt_parser():
         pp.Group(pp.ZeroOrMore(pp.Group(row))).setResultsName('values')
 
 
-def parse_txt(contents):
-    parser = _build_txt_parser()
+def parse_sample(contents):
+    parser = _build_sample_parser()
 
     tree = parser.parseString(contents)
     
@@ -62,7 +62,7 @@ def parse_txt(contents):
 def main():
     with open(sys.argv[1]) as f:
         contents = f.read()
-        d = parse_txt(contents)
+        d = parse_sample(contents)
         print(json.dumps(d, indent=4))
 
 
