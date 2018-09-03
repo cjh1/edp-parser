@@ -2,10 +2,10 @@ import pyparsing as pp
 import json
 import sys
 
-def _build_ana_parser():
+def _build_ana_rcp_parser():
     separator = pp.Suppress(':')
     key = pp.Word(pp.printables, excludeChars=':')
-    value = pp.Regex(r'.*') + pp.LineEnd().suppress()
+    value = pp.Regex(r'[^\r]*') + pp.LineEnd().suppress()
 
     block_name = key + separator  + pp.LineEnd().suppress()
 
@@ -25,8 +25,8 @@ def _build_ana_parser():
     return pp.OneOrMore( pp.Dict(pp.Group(block)))
 
 
-def parse_ana(contents):
-    parser = _build_ana_parser()
+def parse_ana_rcp(contents):
+    parser = _build_ana_rcp_parser()
     tree = parser.parseString(contents)
 
     return tree.asDict()
@@ -35,7 +35,7 @@ def parse_ana(contents):
 def main():
     with open(sys.argv[1]) as f:
         contents = f.read()
-        d = parse_ana(contents)
+        d = parse_ana_rcp(contents)
         print(json.dumps(d, indent=4))
 
 
