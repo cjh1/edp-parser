@@ -5,7 +5,7 @@ import sys
 def _build_ana_rcp_parser():
     separator = pp.Suppress(':')
     key = pp.Word(pp.printables, excludeChars=':')
-    value = pp.Regex(r'[^\r]*') + pp.LineEnd().suppress()
+    value = pp.Regex(r'[^\n\r]*') + pp.LineEnd().suppress()
 
     block_name = key + separator  + pp.LineEnd().suppress()
 
