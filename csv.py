@@ -29,6 +29,12 @@ def _build_csv_parser():
         pp.Group(pp.OneOrMore(pp.Group(csv_row))).setResultsName('csvValues')
 
 
+def _to_float(s):
+    try:
+        return float(s)
+    except ValueError:
+        return s
+
 def parse_csv(contents):
     parser = _build_csv_parser()
 
@@ -40,7 +46,7 @@ def parse_csv(contents):
     csv_values = tree['csvValues']
 
     for i, header in enumerate(csv_headers):
-        data[header] = [row[i] for row in csv_values]
+        data[header] = [_to_float(row[i]) for row in csv_values]
 
     return data
 
