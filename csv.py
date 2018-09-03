@@ -46,7 +46,10 @@ def parse_csv(contents):
     csv_values = tree['csvValues']
 
     for i, header in enumerate(csv_headers):
-        data[header] = [_to_float(row[i]) for row in csv_values]
+        if header == 'sample_no':
+            data[header]  = [int(row[i]) for row in csv_values]
+        else:
+            data[header] = [_to_float(row[i]) for row in csv_values]
 
     return data
 
