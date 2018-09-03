@@ -24,7 +24,7 @@ def _build_csv_parser():
     indented_block = pp.Dict(pp.ungroup(pp.indentedBlock(block_body, indent_stack)))
     block << ( block_name + indented_block | key_value)
 
-    return header + pp.OneOrMore(pp.Dict(pp.Group(block))).setResultsName('meta') + \
+    return pp.Optional(header) + pp.ZeroOrMore(pp.Dict(pp.Group(block))).setResultsName('meta') + \
         csv_header.setResultsName('csvHeader') + \
         pp.Group(pp.OneOrMore(pp.Group(csv_row))).setResultsName('csvValues')
 
@@ -33,7 +33,9 @@ def parse_csv(contents):
     parser = _build_csv_parser()
 
     tree = parser.parseString(contents)
-    data = tree['meta'].asDict()
+    data = {}
+    if 'meta' in tree:
+        data = tree['meta'].asDict()
     csv_headers = tree['csvHeader']
     csv_values = tree['csvValues']
 
