@@ -1,6 +1,6 @@
 import pyparsing as pp
-import json
-import sys
+from pyparsing import pyparsing_common
+
 
 def _build_csv_parser():
     separator = pp.Suppress(':')
@@ -52,15 +52,3 @@ def parse_csv(contents):
             data[header] = [_to_float(row[i]) for row in csv_values]
 
     return data
-
-
-def main():
-    with open(sys.argv[1]) as f:
-        contents = f.read()
-        d = parse_csv(contents)
-        print(json.dumps(d, indent=4))
-
-
-if __name__ == "__main__":
-    main()
-

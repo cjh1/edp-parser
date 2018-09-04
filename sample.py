@@ -57,15 +57,3 @@ def parse_sample(contents):
         data[header] = [float(row[i]) for row in values]
 
     return data
-
-
-def main():
-    with open(sys.argv[1]) as f:
-        contents = f.read()
-        d = parse_sample(contents)
-        print(json.dumps(d, indent=4))
-
-
-if __name__ == "__main__":
-    main()
-

@@ -1,6 +1,6 @@
 import pyparsing as pp
-import json
-import sys
+from pyparsing import pyparsing_common
+
 
 def _build_ana_rcp_parser():
     separator = pp.Suppress(':')
@@ -32,15 +32,3 @@ def parse_ana_rcp(contents):
     tree = parser.parseString(contents)
 
     return tree.asDict()
-
-
-def main():
-    with open(sys.argv[1]) as f:
-        contents = f.read()
-        d = parse_ana_rcp(contents)
-        print(json.dumps(d, indent=4))
-
-
-if __name__ == "__main__":
-    main()
-
