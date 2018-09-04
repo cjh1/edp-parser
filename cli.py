@@ -2,6 +2,7 @@ import click
 import sample
 import ana_rcp
 import csv
+import rawlen
 import json
 import os
 import errno
@@ -32,6 +33,10 @@ def _convert(file, dir):
             output = ana_rcp.parse_ana_rcp(contents)
         elif file.endswith('.csv'):
             output = csv.parse_csv(contents)
+        elif file.endswith('rawlen.txt'):
+            output = rawlen.parse_rawlen(contents)
+        elif os.path.basename(file).startswith('Sample') and file.endswith('.txt'):
+            output = sample.parse_sample(contents)
 
     if not dir:
         print(json.dumps(output, indent=4))
