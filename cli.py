@@ -1,6 +1,7 @@
 import click
 import sample
 import ana_rcp
+import exp
 import csv
 import rawlen
 import json
@@ -31,6 +32,8 @@ def _convert(file, dir):
         output = None
         if file.endswith('.ana') or file.endswith('.rcp'):
             output = ana_rcp.parse_ana_rcp(contents)
+        elif file.endswith('.exp'):
+            output = exp.parse_exp(contents)
         elif file.endswith('.csv'):
             output = csv.parse_csv(contents)
         elif file.endswith('rawlen.txt'):
