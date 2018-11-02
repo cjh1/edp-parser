@@ -40,8 +40,7 @@ def _ingest_runs(gc, project, dir):
                 'runId': run_id,
                 'solutionPh': float(run['solution_ph']),
                 'plateId': run['plate_id'],
-                'electrolyte': run['electrolyte'],
-                'public': True
+                'electrolyte': run['electrolyte']
             }
 
             run = gc.post('edp/projects/%s/runs' % project, json=run)
