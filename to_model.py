@@ -72,9 +72,10 @@ def _ingest_samples(gc, project, composite, dir, ana_file, run_map):
 
             keylist = value['parameters']['platemap_comp4plot_keylist']
 
+            elements = [channel_to_element[x] for x in keylist]
             platemap = {
                 'plateId': plate_ids,
-                'elements': [channel_to_element[x] for x in keylist]
+                'elements': elements
             }
 
             # Now create the plate map
@@ -91,8 +92,9 @@ def _ingest_samples(gc, project, composite, dir, ana_file, run_map):
             for key, value in loading.items():
                 match = comp_regex.match(key)
                 if match:
-                    element = match.group(1)
-                    compositions[element.lower()] = value
+                    element = match.group(1).lower()
+                    if element in elements:
+                        compositions[element] = value
 
             for i, (plate_id, sample_number, run_int) in enumerate(zip(plate_ids, sample_numbers, run_ints)):
                 sample_meta = samples.setdefault(plate_id, {}).setdefault(sample_number, {})
