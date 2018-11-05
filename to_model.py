@@ -13,7 +13,7 @@ channel_to_element = {
     'F': 'zn'
 }
 
-def _ingest_runs(gc, project, dir):
+def _ingest_runs(gc, project, composite, dir):
     # Find the exp file
     [exp_path] = glob.glob('%s/**/*.exp.json' % dir, recursive=True)
 
@@ -43,13 +43,13 @@ def _ingest_runs(gc, project, dir):
                 'electrolyte': run['electrolyte']
             }
 
-            run = gc.post('edp/projects/%s/runs' % project, json=run)
+            run = gc.post('edp/projects/%s/composites/%s/runs' % (project, composite), json=run)
             runs[run_id] = run['_id']
 
 
     return (run_ids, runs)
 
-def _ingest_samples(gc, project, dir, ana_file, run_map):
+def _ingest_samples(gc, project, composite, dir, ana_file, run_map):
 
     samples = {}
     scalars_to_extract = ['Emin.Vrhe', 'Emax.Vrhe', 'Jmin.mAcm2', 'Jmax.mAcm2']
@@ -78,7 +78,7 @@ def _ingest_samples(gc, project, dir, ana_file, run_map):
             }
 
             # Now create the plate map
-            platemap = gc.post('edp/projects/%s/platemaps' % project, json=platemap)
+            platemap = gc.post('edp/projects/%s/composites/%s/platemaps' % (project, composite), json=platemap)
 
             [file_path] = glob.glob('%s/**/%s.json' % (dir, file_path), recursive=True)
             with open(file_path) as lf:
@@ -111,8 +111,12 @@ def _ingest_samples(gc, project, dir, ana_file, run_map):
                         k = s.replace('.', '\\u002e')
                         scalars[k] = loading[s][i]
 
+                sample = gc.post('edp/projects/%s/composites/%s/platemaps/%s/samples'
+                                    % (project, composite, platemap['_id']), json=sample_meta)
+
                 # Now look up time series data
-                [timeseries_file] = glob.glob('%s**/ana__1__Sample%d_*.txt.json' % (dir, sample_number), recursive=True)
+                [timeseries_file] = glob.glob('%s**/ana__1__Sample%d_*.txt.json'
+                                                % (dir, sample_number), recursive=True)
                 #timeseries_ids = []
                 #for timeseries_file in timeseries_files:
                 with open(timeseries_file) as tf:
@@ -121,14 +125,15 @@ def _ingest_samples(gc, project, dir, ana_file, run_map):
                     timeseries = {
                         'data': timeseries
                     }
-                    timeseries = gc.post('edp/projects/%s/timeseries' % project, json=timeseries)
+                    timeseries = gc.post(
+                        'edp/projects/%s/composites/%s/platemaps/%s/samples/%s/timeseries'
+                            % (project, composite, platemap['_id'], sample['_id']), json=timeseries)
 
-                sample_meta['timeseriesId'] = timeseries['_id']
-                gc.post('edp/projects/%s/samples' % project, json=sample_meta)
 
 
 @click.command(help='Ingest data')
 @click.option('-p', '--project', default=None, help='the project id', required=True)
+@click.option('-c', '--composite', default=None, help='the composite id', required=True)
 @click.option('-d', '--dir', help='base path to data to ingest',
               type=click.Path(exists=True, dir_okay=True, file_okay=False, readable=True), default='.')
 @click.option('-a', '--ana-file', default=None,
@@ -138,14 +143,14 @@ def _ingest_samples(gc, project, dir, ana_file, run_map):
                    '(e.g https://girder.example.com/api/v1)')
 @click.option('-k', '--api-key', envvar='GIRDER_API_KEY', default=None,
               help='[default: GIRDER_API_KEY env. variable]', required=True)
-def _ingest(project, dir, ana_file, api_url, api_key):
+def _ingest(project, composite, dir, ana_file, api_url, api_key):
     if dir[-1] != '/':
         dir += '/'
     gc = GirderClient(apiUrl=api_url)
     gc.authenticate(apiKey=api_key)
 
-    (run_ids, runs) = _ingest_runs(gc, project, dir)
-    _ingest_samples(gc, project, dir, ana_file, runs)
+    (run_ids, runs) = _ingest_runs(gc, project, composite, dir)
+    _ingest_samples(gc, project, composite, dir, ana_file, runs)
 
 if __name__ == '__main__':
     _ingest()
