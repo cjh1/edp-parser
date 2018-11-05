@@ -73,13 +73,11 @@ def _ingest_samples(gc, project, composite, dir, ana_file, run_map):
             keylist = value['parameters']['platemap_comp4plot_keylist']
 
             elements = [channel_to_element[x] for x in keylist]
+
             platemap = {
                 'plateId': plate_ids,
                 'elements': elements
             }
-
-            # Now create the plate map
-            platemap = gc.post('edp/projects/%s/composites/%s/platemaps' % (project, composite), json=platemap)
 
             [file_path] = glob.glob('%s/**/%s.json' % (dir, file_path), recursive=True)
             with open(file_path) as lf:
@@ -97,40 +95,49 @@ def _ingest_samples(gc, project, composite, dir, ana_file, run_map):
                         compositions[element] = value
 
             for i, (plate_id, sample_number, run_int) in enumerate(zip(plate_ids, sample_numbers, run_ints)):
-                sample_meta = samples.setdefault(plate_id, {}).setdefault(sample_number, {})
-                sample_meta['plateMapId'] = platemap['_id']
-                sample_meta['runId'] = run_map[run_ids[int(run_int)-1]]
-                sample_meta['sampleNum'] = sample_number
-                for e in compositions.keys():
-                    comp = sample_meta.setdefault('composition',{})
-                    comp[e] = compositions[e][i]
+                # Only process if we haven't already seen it in another platemap
+                if sample_number not in samples.setdefault(plate_id, {}):
+                    sample_meta = {}
+                    sample_meta['runId'] = run_map[run_ids[int(run_int)-1]]
+                    sample_meta['sampleNum'] = sample_number
 
-                scalars = sample_meta.setdefault('scalars', {})
-                for s in scalars_to_extract:
-                    if s in loading:
-                        # We need to replace . with the unicode char so we
-                        # can store the key in mongo
-                        k = s.replace('.', '\\u002e')
-                        scalars[k] = loading[s][i]
+                    comp = {}
+                    sample_meta['composition'] = comp
+                    for e in compositions.keys():
+                        comp[e] = compositions[e][i]
 
-                sample = gc.post('edp/projects/%s/composites/%s/platemaps/%s/samples'
-                                    % (project, composite, platemap['_id']), json=sample_meta)
+                    scalars = sample_meta.setdefault('scalars', {})
+                    for s in scalars_to_extract:
+                        if s in loading:
+                            # We need to replace . with the unicode char so we
+                            # can store the key in mongo
+                            k = s.replace('.', '\\u002e')
+                            scalars[k] = loading[s][i]
 
-                # Now look up time series data
-                [timeseries_file] = glob.glob('%s**/ana__1__Sample%d_*.txt.json'
-                                                % (dir, sample_number), recursive=True)
-                #timeseries_ids = []
-                #for timeseries_file in timeseries_files:
-                with open(timeseries_file) as tf:
-                    timeseries = json.load(tf)
-                    timeseries = {key.replace('.', '\\u002e'):value for (key,value) in timeseries.items()}
-                    timeseries = {
-                        'data': timeseries
-                    }
-                    timeseries = gc.post(
-                        'edp/projects/%s/composites/%s/platemaps/%s/samples/%s/timeseries'
-                            % (project, composite, platemap['_id'], sample['_id']), json=timeseries)
+                    sample = gc.post('edp/projects/%s/composites/%s/samples'
+                                        % (project, composite), json=sample_meta)
 
+                    samples.setdefault(plate_id, {})[sample_number] = sample
+
+                    # Now look up time series data
+                    [timeseries_file] = glob.glob('%s**/ana__1__Sample%d_*.txt.json'
+                                                    % (dir, sample_number), recursive=True)
+                    #timeseries_ids = []
+                    #for timeseries_file in timeseries_files:
+                    with open(timeseries_file) as tf:
+                        timeseries = json.load(tf)
+                        timeseries = {key.replace('.', '\\u002e'):value for (key,value) in timeseries.items()}
+                        timeseries = {
+                            'data': timeseries
+                        }
+                        timeseries = gc.post(
+                            'edp/projects/%s/composites/%s//samples/%s/timeseries'
+                                % (project, composite,sample['_id']), json=timeseries)
+
+                    platemap.setdefault('sampleIds', []).append(sample['_id'])
+
+            # Now create the plate map
+            platemap = gc.post('edp/projects/%s/composites/%s/platemaps' % (project, composite), json=platemap)
 
 
 @click.command(help='Ingest data')
