@@ -131,10 +131,13 @@ def _ingest_samples(gc, project, composite, dir, ana_file, run_map):
                             'data': timeseries
                         }
                         timeseries = gc.post(
-                            'edp/projects/%s/composites/%s//samples/%s/timeseries'
+                            'edp/projects/%s/composites/%s/samples/%s/timeseries'
                                 % (project, composite,sample['_id']), json=timeseries)
+                else:
+                    sample = samples.setdefault(plate_id, {}).get(sample_number)
 
-                    platemap.setdefault('sampleIds', []).append(sample['_id'])
+
+                platemap.setdefault('sampleIds', []).append(sample['_id'])
 
             # Now create the plate map
             platemap = gc.post('edp/projects/%s/composites/%s/platemaps' % (project, composite), json=platemap)
