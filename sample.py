@@ -38,8 +38,11 @@ def _build_sample_parser():
     return  pp.OneOrMore(pp.Dict(key_value)).setResultsName('meta') + \
         pp.Group(pp.ZeroOrMore(pp.Group(row))).setResultsName('values')
 
+parser = None
 def parse_sample(contents):
-    parser = _build_sample_parser()
+    global parser
+    if parser is None:
+        parser = _build_sample_parser()
 
     tree = parser.parseString(contents)
 

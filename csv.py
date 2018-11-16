@@ -5,7 +5,7 @@ from pyparsing import pyparsing_common
 def _build_csv_parser():
     separator = pp.Suppress(':')
     key = pp.Word(pp.printables, excludeChars=':')
-    value = pp.Regex(r'[^\r]*') + pp.LineEnd().suppress()
+    value = pp.Regex(r'[^\n\r]*') + pp.LineEnd().suppress()
 
     block_name = key + separator  + pp.LineEnd().suppress()
 
@@ -13,9 +13,9 @@ def _build_csv_parser():
 
     header = (pp.LineStart().suppress() +  pp.Word(pp.nums) + pp.ZeroOrMore( pp.White().suppress() + pp.Word(pp.nums)) + pp.LineEnd().suppress())
 
-    csv_header = pp.delimitedList(pp.Word(pp.printables, excludeChars=','))
+    csv_header = pp.delimitedList(pp.Word(pp.printables, excludeChars=',')) + pp.LineEnd().suppress()
 
-    csv_row = pp.delimitedList(pp.Word(pp.nums + '.+-e_') | pp.Literal('custom'))
+    csv_row = pp.delimitedList(pp.Word(pp.nums + ';.+-e_') | pp.Literal('custom')) + pp.LineEnd().suppress()
 
     indent_stack = [1]
     block = pp.Forward()
@@ -35,8 +35,11 @@ def _to_float(s):
     except ValueError:
         return s
 
+parser = None 
 def parse_csv(contents):
-    parser = _build_csv_parser()
+    global parser
+    if parser is None:
+        parser = _build_csv_parser()
 
     tree = parser.parseString(contents)
     data = {}

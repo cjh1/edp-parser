@@ -27,6 +27,7 @@ def _mkdir_p(path):
               help='path to write the outout',
               type=click.Path(exists=True, file_okay=False, dir_okay=True, writable=True))
 def _convert(file, dir):
+    print(file)
     with open(file) as f:
         contents = f.read()
         output = None
@@ -36,9 +37,11 @@ def _convert(file, dir):
             output = exp.parse_exp(contents)
         elif file.endswith('.csv'):
             output = csv.parse_csv(contents)
+            
         elif file.endswith('rawlen.txt'):
             output = rawlen.parse_rawlen(contents)
         elif os.path.basename(file).startswith('Sample') and file.endswith('.txt'):
+            print('sampple')
             output = sample.parse_sample(contents)
 
     if not dir:

@@ -8,11 +8,11 @@ import errno
 
 def _build_rawlen_parser():
     header = pp.Group(pp.LineStart().suppress() +  pp.Word(pp.printables) +
-              pp.ZeroOrMore( pp.White(ws='\t ').suppress() + pp.Word(pp.printables)) +
-              pp.LineEnd().suppress())
+              pp.ZeroOrMore( pp.White(ws='\t ').suppress() + pp.Word(pp.printables)))# +
+              #pp.LineEnd().suppress())
     row = (pp.LineStart().suppress() +  pp.Word(pp.nums + '.+-e_') +
-           pp.ZeroOrMore(pp.White(ws='\t ').suppress() + pp.Word(pp.nums + '.+-e_')) +
-           pp.LineEnd().suppress())
+           pp.ZeroOrMore(pp.White(ws='\t ').suppress() + pp.Word(pp.nums + '.+-e_'))) #+
+           #pp.LineEnd().suppress())
 
     return header.setResultsName('header') + \
         pp.Group(pp.OneOrMore(pp.Group(row))).setResultsName('values')
@@ -22,9 +22,11 @@ def _to_float(s):
         return float(s)
     except ValueError:
         return s
-
+parser = None
 def parse_rawlen(contents):
-    parser = _build_rawlen_parser()
+    global parser
+    if parser is None:
+        parser = _build_rawlen_parser()
     tree = parser.parseString(contents)
     header = tree['header']
     values = tree['values']
